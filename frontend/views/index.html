@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com" defer></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"
+            integrity="sha512-TjBzDQIDnc6pWyeM1bhMnDxtWH0QpOXMcVooglXrali/Tj7W569/wd4E8EDjk1CwOAOPSJon1VfcEt1BI4xIrA=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
+
+        <title>Document</title>
+    </head>
+    <body class="min-h-[100dvh] grid place-items-center py-12">
+        <div class="flex flex-col items-center">
+            <form class="flex flex-col space-y-4" id="fileUpload">
+                <img
+                    src=""
+                    class="w-96 h-96 border p-4 shadow-lg rounded-lg"
+                    id="img"
+                />
+                <input
+                    type="file"
+                    name="file"
+                    id="file"
+                    accept=".jpg, .png, .jpeg"
+                    class="px-4 py-2 bg-slate-900 text-white rounded-md"
+                />
+                <button
+                    type="submit"
+                    class="w-full border py-2 border-slate-900 rounded-md hover:bg-slate-900 hover:text-white transition-all"
+                >
+                    Upload
+                </button>
+            </form>
+
+            <div class="grid grid-cols-3 gap-4 pt-12" id="images"></div>
+        </div>
+
+        <script>
+            const formData = new FormData();
+
+            const fetchImages = async () => {
+                try {
+                    const { data } = await axios.get(
+                        "http://localhost:3000/images"
+                    );
+
+                    const images = $("#images");
+
+                    $("#images").empty();
+
+                    data.forEach((img) =>
+                        images.append(
+                            `
+                        <div class="p-8 bg-slate-900 rounded-md hover:shadow-md flex flex-col space-y-4 max-w-sm w-full">
+                            <img src="${img.url}" alt="" class="w-96 h-full" />
+                            <h1 class="text-3xl text-white pt-4 font-bold">${
+                                img.original_filename
+                            }</h1>
+                            <p class="text-white italic">${new Date(
+                                img.createdAt
+                            ).toLocaleString()}</p>
+                        </div>
+                        `
+                        )
+                    );
+                } catch (e) {
+                    console.log(e);
+                }
+            };
+
+            const uploadImage = async (e) => {
+                try {
+                    const data = await axios.post(
+                        "http://localhost:3000/upload",
+                        formData,
+                        {
+                            headers: {
+                                "Content-Type": "multipart/form-data",
+                            },
+                        }
+                    );
+
+                    alert("File uploaded successfully");
+                    fetchImages();
+                } catch (e) {
+                    alert(e);
+                }
+            };
+
+            $("#fileUpload").on("submit", async function (e) {
+                e.preventDefault();
+                uploadImage();
+            });
+
+            $("#file").on("change", (event) => {
+                formData.append("img", event.target.files[0]);
+                console.log(formData);
+                $("#img").attr(
+                    "src",
+                    URL.createObjectURL(event.target.files[0])
+                );
+            });
+
+            fetchImages();
+        </script>
+    </body>
+</html>
